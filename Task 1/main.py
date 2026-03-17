@@ -1,5 +1,4 @@
 import smtplib
-import time
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -11,12 +10,30 @@ def get_mails(file):
         emails = email_file.read()
         emails = emails.split('\n')
         start_time = datetime.now()
-        failed = 0
-        success = 0
+
+
+
+
+        send_mail(emails)
+
+        end_time = datetime.now()
+        duration = end_time - start_time
+        print("Sent successfully")
+        print(f"Mail sent to {len(emails)} clients in {duration.seconds} seconds")
+
+def send_mail(emails):
+    failed = 0
+    success = 0
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+        print("Authenticating...")
+        s.login(email_address, email_password)
         print("Sending...")
+
         for x in emails:
             try:
-                send_mail(x)
+
+                s.sendmail(email_address, x, msg)
                 success += 1
             except smtplib.SMTPConnectError:
                 # If a connection could not be established
@@ -34,24 +51,29 @@ def get_mails(file):
             finally:
                 print(f"Mail sent to {x}")
 
-        end_time = datetime.now()
-        duration = end_time - start_time
-        print("Sent successfully")
-        print(f"Mail sent to {len(emails)} in {duration.seconds} seconds")
 
-def send_mail(email:str):
+if __name__ == "__main__":
     email_address = os.getenv("EMAIL_NAME")
     email_password = os.getenv("EMAIL_PASSWORD")
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
 
-        s.login(email_address, email_password)
-        subject = "Automated Python Email"
-        body = "This is a test message sent via Python."
-        msg = f"Subject: {subject}\n\n{body}"
-        s.sendmail(email_address, email, msg)
+    msg:str
+    while True:
+        email_opt = input("""What do you want to send
+            1. Type message here
+            2. Send file containing message
+            """)
 
+        if email_opt == "1":
+            subject = input("Type header here: ")
+            body = input("Type body here: ")
+            msg = f"Subject: {subject}\n\n{body}"
+            get_mails("emails.txt")
+            break
+        if email_opt == "2":
+            msg = "lorem ipsum"
+            get_mails("emails.txt")
+            break
+        else:
+            print("Invalid option")
 
-
-if __name__ == "__main__":
-    get_mails("emails.txt")
